@@ -50,4 +50,37 @@ class Order extends Model
     {
         return $this->belongsTo(Customer::class);
     }
+
+    public function itemsTotal() {
+        $totalItems = 0;
+        foreach ($this->items as $item) {
+            $totalItems += $item->product->price * $item->qtd;
+        }
+        return $totalItems;
+    }
+
+    public function getTotal() {
+        return $this->itemsTotal() + $this->late_fee + $this->delivery_fee - $this->discount;
+    }
+
+    public function totalPayments() {
+        $total=0;
+        foreach($this->payments as $payment) {
+            $total += $payment->amount;
+        }
+    }
+
+    public function adjustBalance() {
+        if($this->balance != $this->getTotal() - $this->totalPayments()) {
+            $this->balance = $this->getTotal() - $this->totalPayments();
+            $this->save();
+        }
+    }
+
+    public function adjustTotal() {
+        if($this->total != $this->getTotal()) {
+            $this->total = $this->getTotal();
+            $this->save();
+        }
+    }    
 }
